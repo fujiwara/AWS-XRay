@@ -1,5 +1,5 @@
 use strict;
-use AWS::XRay qw/ trace /;
+use AWS::XRay qw/ capture /;
 use Test::More;
 use IO::Scalar;
 use JSON::XS;
@@ -12,13 +12,13 @@ no warnings 'redefine';
     IO::Scalar->new(\$buf);
 };
 
-trace "myApp", sub {
+capture "myApp", sub {
     my $seg = shift;
     sleep 0.1;
-    trace "remote1", sub { sleep 0.1 };
-    trace "remote2", sub {
+    capture "remote1", sub { sleep 0.1 };
+    capture "remote2", sub {
         sleep 0.1;
-        trace "remote3", sub { sleep 0.1 };
+        capture "remote3", sub { sleep 0.1 };
     };
     $seg->{annotations}->{foo} = "bar";
 };

@@ -31,17 +31,35 @@ sub new {
     bless $segment, $class;
 }
 
-sub send {
+# alias for backward compatibility
+*send = \&close;
+
+sub close {
     my $self = shift;
     $self->{end_time} //= Time::HiRes::time();
     my $sock = AWS::XRay::sock() or return;
     $sock->print($header, $json->encode({%$self}));
 }
 
+sub trace_header {
+    my $self = shift;
+    sprintf("Root=%s;Parent=%s", $self->{trace_id}, $self->{id});
+}
+
 package AWS::XRay::Segment::NoTrace;
 
-sub send {
+sub new {
+    my $class = shift;
+    bless {}, $class;
+}
+
+sub close {
     # do not anything
 }
+
+sub trace_header {
+    "";
+}
+
 
 1;

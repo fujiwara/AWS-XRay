@@ -4,16 +4,16 @@ AWS::XRay - AWS X-Ray tracing library
 
 # SYNOPSIS
 
-    use AWS::XRay qw/ trace /;
+    use AWS::XRay qw/ capture /;
 
-    trace "myApp", sub {
-        trace "remote", sub {
+    capture "myApp", sub {
+        capture "remote", sub {
             # do something ...
-            trace "nested", sub {
+            capture "nested", sub {
                 # ...
             };
         };
-        trace "myHTTP", sub {
+        capture "myHTTP", sub {
             my $segment = shift;
             # ...
             $segment->{http} = { # modify segument document
@@ -26,6 +26,16 @@ AWS::XRay - AWS X-Ray tracing library
                 },
             };
         };
+    };
+
+    my $header;
+    capture "source", sub {
+        my $segment = shift;
+        $header = $segment->trace_header;
+    };
+    capture_from $header, "dest", sub {
+        my $segment = shift;  # is a child of "source" segment
+        # ...
     };
 
 # DESCRIPTION
@@ -42,33 +52,37 @@ Generate a Trace ID. (e.g. "1-581cf771-a006649127e371903a2de979")
 
 [Document](https://docs.aws.amazon.com/xray/latest/devguide/xray-api-sendingdata.html#xray-api-traceids)
 
-## trace($name, $code)
+## capture($name, $code)
 
-trace() executes $code->($segment) and send the segment document to X-Ray daemon.
+capture() executes $code->($segment) and send the segment document to X-Ray daemon.
 
 $segment is a AWS::XRay::Segment object.
 
 When $AWS::XRay::TRACE\_ID is not set, generates TRACE\_ID automatically.
 
-When trace() called in parent trace(), $segment is a sub segment document.
+When capture() called from other capture(), $segment is a sub segment document.
 
 See also [AWS X-Ray Segment Documents](https://docs.aws.amazon.com/xray/latest/devguide/xray-api-segmentdocuments.html).
 
-## daemon\_host
+## capture\_from($header, $name, $code)
 
-Set a address for X-Ray daemon. defult "127.0.0.1".
+capture\_from() parses the trace header and capture the $code with sub segment of header's segment.
 
-    AWS::XRay->daemon_host("example.com");
+## parse\_trace\_header($header)
 
-## daemon\_port
+    my ($trace_id, $segment_id) = parse_trace_header($header);
 
-Set a UDP port number for X-Ray daemon. defult 2000.
+Parse a trace header (e.g. "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8").
 
-    AWS::XRay->daemon_port(2002);
+# CONFIGURATION
 
 ## $AWS::XRay::Enabled
 
-Default true. When set false, trace() executes sub but do not send segument documents to X-Ray daemon.
+Default true. When set false, capture() executes sub but do not send segument documents to X-Ray daemon.
+
+## AWS\_XRAY\_DAEMON\_ADDRESS environment variable
+
+Set the host and port of the X-Ray daemon. Default 127.0.0.1:2000
 
 # LICENSE
 

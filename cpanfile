@@ -10,4 +10,3 @@ requires 'Types::Serialiser';
 requires 'IO::Socket::INET';
 requires 'Crypt::URandom';
 requires 'Time::HiRes';
-requires 'Class::Data::Inheritable';
