@@ -14,12 +14,15 @@ sub new {
     my $class = shift;
     my $src   = shift;
 
+    return bless {}, "${class}::NoTrace" if !$AWS::XRay::ENABLED;
+
     my $segment = {
-        %$src,
         id         => AWS::XRay::new_id(),
         start_time => Time::HiRes::time(),
+        trace_id   => $AWS::XRay::TRACE_ID,
+        %$src,
     };
-    if (my $parent_id = $AWS::XRay::CURRENT_ID) {
+    if (my $parent_id = $AWS::XRay::SEGMENT_ID) {
         # This is a sub segment.
         $segment->{parent_id} = $parent_id;
         $segment->{type}      = "subsegment";
@@ -30,9 +33,15 @@ sub new {
 
 sub send {
     my $self = shift;
-    $self->{trace_id} //= $AWS::XRay::TRACE_ID;
     $self->{end_time} //= Time::HiRes::time();
-    AWS::XRay::sock()->print($header, $json->encode({%$self}));
+    my $sock = AWS::XRay::sock() or return;
+    $sock->print($header, $json->encode({%$self}));
+}
+
+package AWS::XRay::Segment::NoTrace;
+
+sub send {
+    # do not anything
 }
 
 1;

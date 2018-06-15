@@ -1,5 +1,5 @@
 use strict;
-use AWS::XRay qw/ trace trace_root /;
+use AWS::XRay qw/ trace /;
 use Test::More;
 use IO::Scalar;
 use JSON::XS;
@@ -12,22 +12,19 @@ no warnings 'redefine';
     IO::Scalar->new(\$buf);
 };
 
-trace_root(
-    { name => "myApp" },
-    sub {
+trace "myApp", sub {
+    my $seg = shift;
+    sleep 0.1;
+    trace "remote1", sub { sleep 0.1 };
+    trace "remote2", sub {
         sleep 0.1;
-        trace({ name => "remote1"}, sub { sleep 0.1 });
-        trace(
-            { name => "remote2"}, sub {
-                sleep 0.1;
-                trace({ name => "remote3" }, sub { sleep 0.1 });
-            },
-        );
-    },
-);
+        trace "remote3", sub { sleep 0.1 };
+    };
+    $seg->{annotations}->{foo} = "bar";
+};
 
 is $buf =~ s/{"format":"json","version":1}//g => 4, "includes 4 segment headers";
-# diag $buf;
+diag $buf;
 my @seg = split /\n/, $buf;
 shift @seg; # despose first ""
 
@@ -37,6 +34,7 @@ like $root->{trace_id} => qr/\A1-[0-9a-fA-F]{8}-[0-9a-fA-F]{24}\z/, "trace_id fo
 like $root->{id}       => qr/\A[0-9a-fA-F]{16}\z/;
 is $root->{type}, undef;
 ok $root->{start_time} < $root->{end_time};
+is $root->{annotations}->{foo} => "bar";
 
 my $trace_id = $root->{trace_id};
 my $root_id  = $root->{id};

@@ -4,42 +4,29 @@ AWS::XRay - AWS X-Ray tracing library
 
 # SYNOPSIS
 
-    use AWS::XRay qw/ trace trace_root /;
-    
-    sub remote_access {
-        my (@args) = @_;
-        trace({ name => "externalApp1" }, sub { ... });
-        trace({ name => "externalApp2" }, sub { ... });
-    }
+    use AWS::XRay qw/ trace /;
 
-    # start tracing
-    trace_root({ name => "myApp" }, sub { remote_access() }, "args");
-
-    sub custom_trace {
-        # custom segments
-        my $segment = new_segment({
-           name        => "myHTTP",
-           annotations => {
-             // ...
-           },
-           metadata => {
-             // ...
-           },
-        });
-        # ... process
-        $segment->{http} = {
-            request => {
-                method => "GET",
-                url    => "http://localhost/",
-            },
-            response => {
-                status => 200,
-            },
+    trace "myApp", sub {
+        trace "remote", sub {
+            # do something ...
+            trace "nested", sub {
+                # ...
+            };
         };
-        $segment->send();
-    }
-
-    trace_root({ name => "myApp" }, sub { custom_trace() });
+        trace "myHTTP", sub {
+            my $segment = shift;
+            # ...
+            $segment->{http} = { # modify segument document
+                request => {
+                    method => "GET",
+                    url    => "http://localhost/",
+                },
+                response => {
+                    status => 200,
+                },
+            };
+        };
+    };
 
 # DESCRIPTION
 
@@ -55,39 +42,17 @@ Generate a Trace ID. (e.g. "1-581cf771-a006649127e371903a2de979")
 
 [Document](https://docs.aws.amazon.com/xray/latest/devguide/xray-api-sendingdata.html#xray-api-traceids)
 
-## trace\_root($segment, $code, @args)
+## trace($name, $code)
 
-Start tracing with a new Trace ID.
+trace() executes $code->($segment) and send the segment document to X-Ray daemon.
 
-$segment is a [segment document](https://docs.aws.amazon.com/xray/latest/devguide/xray-api-segmentdocuments.html) hashref.
+$segment is a AWS::XRay::Segment object.
 
-"name" field is required.
+When $AWS::XRay::TRACE\_ID is not set, generates TRACE\_ID automatically.
 
-This function executes $code->(@args) and send a segment document to X-Ray daemon.
+When trace() called in parent trace(), $segment is a sub segment document.
 
-## trace($segment, $code, @args)
-
-trace executes $code->(@args) and send a sub segment document to X-Ray daemon.
-
-This function must be called from trace\_root().
-
-## new\_segment($src)
-
-new\_segment returns a [AWS::XRay::Segment](https://metacpan.org/pod/AWS::XRay::Segment) object.
-
-    local $AWS::XRay::TRACE_ID = new_trace_id();
-    my $segment = new_segment({ name => "myApp" });
-    {
-        local $AWS::XRay::CURRENT_ID = $segment->{id};
-        my $sub_segment = new_segment({ name => "mySub" });
-        # ...
-        $sub_segment->send();
-    }
-    $segment->send();
-
-When $AWS::XRay::TRACE\_ID is set, new\_segment() returns a segment object.
-
-When $AWS::XRay::CURRENT\_ID is set, new\_segment() returns a sub segment object.
+See also [AWS X-Ray Segment Documents](https://docs.aws.amazon.com/xray/latest/devguide/xray-api-segmentdocuments.html).
 
 ## daemon\_host
 
@@ -100,6 +65,10 @@ Set a address for X-Ray daemon. defult "127.0.0.1".
 Set a UDP port number for X-Ray daemon. defult 2000.
 
     AWS::XRay->daemon_port(2002);
+
+## $AWS::XRay::Enabled
+
+Default true. When set false, trace() executes sub but do not send segument documents to X-Ray daemon.
 
 # LICENSE
 
