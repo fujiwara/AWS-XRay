@@ -17,6 +17,7 @@ our $VERSION = "0.02";
 our $TRACE_ID;
 our $SEGMENT_ID;
 our $ENABLED;
+our $SAMPLED;
 our $SAMPLING_RATE = 1;
 
 our $DAEMON_HOST = "127.0.0.1";
@@ -63,15 +64,18 @@ sub capture {
     my ($name, $code) = @_;
 
     my $enabled;
+    my $sampled = $AWS::XRay::SAMPLED;
     if (defined $AWS::XRay::ENABLED) {
         $enabled = $AWS::XRay::ENABLED ? 1 : 0; # fix true or false (not undef)
     } elsif ($AWS::XRay::TRACE_ID) {
         $enabled = 0; # called from parent capture
     } else {
-        # root capture
-        $enabled = rand() < $SAMPLING_RATE ? 1 : 0;
+        # root capture try sampling
+        $sampled = rand() < $SAMPLING_RATE ? 1 : 0;
+        $enabled = $sampled ? 1 : 0;
     }
     local $AWS::XRay::ENABLED = $enabled;
+    local $AWS::XRay::SAMPLED = $sampled;
 
     return $code->(AWS::XRay::Segment->new) if !$enabled;
 
@@ -116,9 +120,9 @@ sub capture_from {
     my ($header, $name, $code) = @_;
     my ($trace_id, $segment_id, $sampled) = parse_trace_header($header);
 
-    local $AWS::XRay::ENABLED = $sampled || rand() < $SAMPLING_RATE;
+    local $AWS::XRay::SAMPLED = $sampled // rand() < $SAMPLING_RATE;
+    local $AWS::XRay::ENABLED = $AWS::XRay::SAMPLED;
     local($AWS::XRay::TRACE_ID, $AWS::XRay::SEGMENT_ID) = ($trace_id, $segment_id);
-
     capture($name, $code);
 }
 
@@ -133,7 +137,7 @@ sub parse_trace_header {
         $segment_id = $1;
     }
     if ($header =~ /Sampled=([^;]+)/) {
-        $sampled = $1 ? 1 : 0;
+        $sampled = $1;
     }
     return ($trace_id, $segment_id, $sampled);
 }
