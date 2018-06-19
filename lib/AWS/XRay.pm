@@ -12,7 +12,7 @@ use AWS::XRay::Segment;
 use Exporter 'import';
 our @EXPORT_OK = qw/ new_trace_id capture capture_from trace /;
 
-our $VERSION = "0.02";
+our $VERSION = "0.03";
 
 our $TRACE_ID;
 our $SEGMENT_ID;
