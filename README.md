@@ -89,6 +89,18 @@ $rate is allowed a float value between 0 and 1.
 
 When capture\_from() called with a trace header includes "Sampled=1", all of followed capture() are traced.
 
+## samplier($code)
+
+Set/Get a code ref to sample for capture().
+
+    AWS::XRay->sampler(sub {
+        if ($some_condition) {
+           return 1;
+        } else {
+           return 0;
+        }
+    });
+
 ## AWS\_XRAY\_DAEMON\_ADDRESS environment variable
 
 Set the host and port of the X-Ray daemon. Default 127.0.0.1:2000

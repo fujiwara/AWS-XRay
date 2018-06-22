@@ -19,6 +19,7 @@ our $SEGMENT_ID;
 our $ENABLED;
 our $SAMPLED;
 our $SAMPLING_RATE = 1;
+our $SAMPLER       = sub { rand() < $SAMPLING_RATE };
 
 our $DAEMON_HOST = "127.0.0.1";
 our $DAEMON_PORT = 2000;
@@ -35,6 +36,14 @@ sub sampling_rate {
         $SAMPLING_RATE = shift;
     }
     $SAMPLING_RATE;
+}
+
+sub sampler {
+    my $class = shift;
+    if (@_) {
+        $SAMPLER = shift;
+    }
+    $SAMPLER;
 }
 
 sub sock {
@@ -71,8 +80,8 @@ sub capture {
         $enabled = 0; # called from parent capture
     } else {
         # root capture try sampling
-        $sampled = rand() < $SAMPLING_RATE ? 1 : 0;
-        $enabled = $sampled ? 1 : 0;
+        $sampled = $SAMPLER->() ? 1 : 0;
+        $enabled = $sampled     ? 1 : 0;
     }
     local $AWS::XRay::ENABLED = $enabled;
     local $AWS::XRay::SAMPLED = $sampled;
@@ -237,6 +246,18 @@ $rate is allowed a float value between 0 and 1.
 1 means all of capture() are traced.
 
 When capture_from() called with a trace header includes "Sampled=1", all of followed capture() are traced.
+
+=head2 samplier($code)
+
+Set/Get a code ref to sample for capture().
+
+    AWS::XRay->sampler(sub {
+        if ($some_condition) {
+           return 1;
+        } else {
+           return 0;
+        }
+    });
 
 =head2 AWS_XRAY_DAEMON_ADDRESS environment variable
 
