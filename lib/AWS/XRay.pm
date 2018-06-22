@@ -129,7 +129,7 @@ sub capture_from {
     my ($header, $name, $code) = @_;
     my ($trace_id, $segment_id, $sampled) = parse_trace_header($header);
 
-    local $AWS::XRay::SAMPLED = $sampled // rand() < $SAMPLING_RATE;
+    local $AWS::XRay::SAMPLED = $sampled // $SAMPLER->();
     local $AWS::XRay::ENABLED = $AWS::XRay::SAMPLED;
     local($AWS::XRay::TRACE_ID, $AWS::XRay::SEGMENT_ID) = ($trace_id, $segment_id);
     capture($name, $code);

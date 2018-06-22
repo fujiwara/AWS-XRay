@@ -39,4 +39,14 @@ subtest "odd", sub {
     ok scalar(@seg) == 500;
 };
 
+subtest "odd_from", sub {
+    reset();
+    AWS::XRay->sampler(sub { state $count = 0; $count++ % 2 == 0 });
+    for ( 1 .. 1000 ) {
+        capture_from "", "root $_", sub {};
+    }
+    my @seg = segments();
+    ok scalar(@seg) == 500;
+};
+
 done_testing;
