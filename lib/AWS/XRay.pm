@@ -8,6 +8,7 @@ use Crypt::URandom ();
 use IO::Socket::INET;
 use Time::HiRes ();
 use AWS::XRay::Segment;
+use AWS::XRay::Buffer;
 
 use Exporter 'import';
 our @EXPORT_OK = qw/ new_trace_id capture capture_from trace /;
@@ -20,6 +21,7 @@ our $ENABLED;
 our $SAMPLED;
 our $SAMPLING_RATE = 1;
 our $SAMPLER       = sub { rand() < $SAMPLING_RATE };
+our $AUTO_FLUSH    = 1;
 
 our $DAEMON_HOST = "127.0.0.1";
 our $DAEMON_PORT = 2000;
@@ -46,12 +48,24 @@ sub sampler {
     $SAMPLER;
 }
 
+sub auto_flush {
+    my $class = shift;
+    my $auto_flush = shift;
+    if ($auto_flush != $AUTO_FLUSH) {
+        undef $Sock; # regenerate
+    }
+    $AUTO_FLUSH = $auto_flush;
+}
+
 sub sock {
-    $Sock //= IO::Socket::INET->new(
-        PeerAddr => $DAEMON_HOST || "127.0.0.1",
-        PeerPort => $DAEMON_PORT || 2000,
-        Proto    => "udp",
-    );
+    $Sock //= AWS::XRay::Buffer->new(
+            IO::Socket::INET->new(
+                PeerAddr => $DAEMON_HOST || "127.0.0.1",
+                PeerPort => $DAEMON_PORT || 2000,
+                Proto    => "udp",
+            ),
+            $AUTO_FLUSH,
+        );
 }
 
 sub new_trace_id {
