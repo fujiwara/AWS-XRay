@@ -16,6 +16,13 @@ subtest "auto_flush=1", sub {
 
     $b->print("XXX");
     is $buf => "foobarbazXXX";
+
+    $b->print("YYY");
+    $b->close;
+    is $buf => "foobarbazXXXYYY";
+
+    $b->print("ZZZ");
+    is $buf => "foobarbazXXXYYYZZZ";
 };
 
 subtest "auto_flush=0", sub {
@@ -33,6 +40,14 @@ subtest "auto_flush=0", sub {
 
     $b->flush;
     is $buf => "foobarbazXXX";
+
+    $b->print("YYY");
+    $b->close;
+    is $buf => "foobarbazXXX";
+
+    $b->print("ZZZ");
+    $b->flush;
+    is $buf => "foobarbazXXXZZZ";
 };
 
 done_testing;

@@ -50,11 +50,15 @@ sub sampler {
 
 sub auto_flush {
     my $class = shift;
-    my $auto_flush = shift;
-    if ($auto_flush != $AUTO_FLUSH) {
-        undef $Sock; # regenerate
+    if (@_) {
+        my $auto_flush = shift;
+        if ($auto_flush != $AUTO_FLUSH) {
+            $Sock->close if $Sock && $Sock->can("close");
+            undef $Sock; # regenerate
+        }
+        $AUTO_FLUSH = $auto_flush;
     }
-    $AUTO_FLUSH = $auto_flush;
+    $AUTO_FLUSH;
 }
 
 sub sock {
@@ -272,6 +276,14 @@ Set/Get a code ref to sample for capture().
            return 0;
         }
     });
+
+=head2 auto_flush($mode)
+
+Set/Get auto flush mode.
+
+When $mode is 1 (default), segment data will be sent to xray daemon immediately after capture() called.
+
+When $mode is 0, segment data are buffered in memory. You should call AWS::XRay->sock->flush() to send the buffered segment data or call AWS::XRay->sock->close() to discard the buffer.
 
 =head2 AWS_XRAY_DAEMON_ADDRESS environment variable
 

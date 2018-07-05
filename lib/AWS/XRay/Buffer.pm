@@ -21,6 +21,15 @@ sub flush {
     1;
 }
 
+sub close {
+    my $self = shift;
+    if ($self->{auto_flush} && length($self->{buf}) > 0) {
+        $self->flush;
+    }
+    $self->{buf} = "";
+    1;
+}
+
 sub print {
     my $self = shift;
     if ($self->{auto_flush}) {
