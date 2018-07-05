@@ -8,7 +8,7 @@ sub new {
     my $class = shift;
     my ($sock, $auto_flush) = @_;
     bless {
-        buf        => "",
+        buf        => [],
         sock       => $sock,
         auto_flush => $auto_flush,
     }, $class;
@@ -16,27 +16,28 @@ sub new {
 
 sub flush {
     my $self = shift;
-    $self->{sock}->print($self->{buf});
-    $self->{buf} = "";
+    my $sock = $self->{sock};
+    for my $buf (@{$self->{buf}}) {
+        $sock->syswrite($buf, length($buf));
+    }
+    $self->{buf} = [];
     1;
 }
 
 sub close {
     my $self = shift;
-    if ($self->{auto_flush} && length($self->{buf}) > 0) {
-        $self->flush;
-    }
-    $self->{buf} = "";
+    $self->{buf} = [];
     1;
 }
 
 sub print {
     my $self = shift;
+    my $data = join("", @_);
     if ($self->{auto_flush}) {
-        $self->{sock}->print(@_);
+        $self->{sock}->syswrite($data, length($data));
     }
     else {
-        $self->{buf} .= $_ for @_;
+        push @{$self->{buf}}, $data;
     }
 }
 
