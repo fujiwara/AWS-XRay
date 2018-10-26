@@ -74,6 +74,14 @@ capture\_from() parses the trace header and capture the $code with sub segment o
 
 Parse a trace header (e.g. "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8").
 
+## add\_capture($package, $method1\[, $method2, ...\])
+
+add\_capture() adds a capture to package::method.
+
+    AWS::XRay->add_capture("MyApp", "foo", "bar");
+
+The segments of these captures are named as "MyApp::foo" and "MyApp::bar".
+
 # CONFIGURATION
 
 ## sampling\_rate($rate)
