@@ -17,7 +17,7 @@ sub myApp {
     };
 }
 
-AWS::XRay->add_capture(__PACKAGE__, "myApp");
+AWS::XRay->add_capture("main", "myApp");
 
 myApp();
 
@@ -25,7 +25,9 @@ my @seg = segments();
 ok @seg == 4;
 
 my $root = pop @seg;
-is $root->{name}, "main::myApp";
+is $root->{name}, "main";
+is $root->{metadata}->{method}, "myApp";
+is $root->{metadata}->{package}, "main";
 like $root->{trace_id} => qr/\A1-[0-9a-fA-F]{8}-[0-9a-fA-F]{24}\z/, "trace_id format";
 like $root->{id}       => qr/\A[0-9a-fA-F]{16}\z/;
 is $root->{type}, undef;
