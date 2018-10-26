@@ -78,9 +78,10 @@ Parse a trace header (e.g. "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=5399
 
 add\_capture() adds a capture to package::method.
 
-    AWS::XRay->add_capture("MyApp", "foo", "bar");
+    AWS::XRay->add_capture("MyApp::Model", "foo", "bar");
 
-The segments of these captures are named as "MyApp::foo" and "MyApp::bar".
+The segments of these captures are named as "MyApp::Model".
+These segments include metadata "method": "foo" or "bar".
 
 # CONFIGURATION
 

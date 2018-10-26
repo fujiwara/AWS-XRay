@@ -178,8 +178,11 @@ sub add_capture {
         *{"${package}::${method}"} = sub {
             my @args = @_;
             capture(
-                "${package}::${method}",
+                $package,
                 sub {
+                    my $segment = shift;
+                    $segment->{metadata}->{method}  = $method;
+                    $segment->{metadata}->{package} = $package;
                     $orig->(@args);
                 },
             );
@@ -272,9 +275,10 @@ Parse a trace header (e.g. "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=5399
 
 add_capture() adds a capture to package::method.
 
-    AWS::XRay->add_capture("MyApp", "foo", "bar");
+    AWS::XRay->add_capture("MyApp::Model", "foo", "bar");
 
-The segments of these captures are named as "MyApp::foo" and "MyApp::bar".
+The segments of these captures are named as "MyApp::Model".
+These segments include metadata "method": "foo" or "bar".
 
 =head1 CONFIGURATION
 
