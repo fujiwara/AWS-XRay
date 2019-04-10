@@ -91,25 +91,25 @@ sub capture {
     my ($name, $code) = @_;
 
     my $enabled;
-    my $sampled = $AWS::XRay::SAMPLED;
-    if (defined $AWS::XRay::ENABLED) {
-        $enabled = $AWS::XRay::ENABLED ? 1 : 0; # fix true or false (not undef)
-    } elsif ($AWS::XRay::TRACE_ID) {
+    my $sampled = $SAMPLED;
+    if (defined $ENABLED) {
+        $enabled = $ENABLED ? 1 : 0; # fix true or false (not undef)
+    } elsif ($TRACE_ID) {
         $enabled = 0; # called from parent capture
     } else {
         # root capture try sampling
         $sampled = $SAMPLER->() ? 1 : 0;
         $enabled = $sampled     ? 1 : 0;
     }
-    local $AWS::XRay::ENABLED = $enabled;
-    local $AWS::XRay::SAMPLED = $sampled;
+    local $ENABLED = $enabled;
+    local $SAMPLED = $sampled;
 
     return $code->(AWS::XRay::Segment->new) if !$enabled;
 
-    local $AWS::XRay::TRACE_ID = $AWS::XRay::TRACE_ID // new_trace_id();
+    local $TRACE_ID = $TRACE_ID // new_trace_id();
 
     my $segment = AWS::XRay::Segment->new({ name => $name });
-    local $AWS::XRay::SEGMENT_ID = $segment->{id};
+    local $SEGMENT_ID = $segment->{id};
 
     my @ret;
     eval {
