@@ -6,6 +6,7 @@ use warnings;
 
 use Crypt::URandom ();
 use IO::Socket::INET;
+use Module::Load;
 use Time::HiRes ();
 use AWS::XRay::Segment;
 use AWS::XRay::Buffer;
@@ -22,6 +23,8 @@ our $SAMPLED;
 our $SAMPLING_RATE = 1;
 our $SAMPLER       = sub { rand() < $SAMPLING_RATE };
 our $AUTO_FLUSH    = 1;
+
+our @PLUGINS;
 
 our $DAEMON_HOST = "127.0.0.1";
 our $DAEMON_PORT = 2000;
@@ -46,6 +49,15 @@ sub sampler {
         $SAMPLER = shift;
     }
     $SAMPLER;
+}
+
+sub plugins {
+    my $class = shift;
+    if (@_) {
+        @PLUGINS = @_;
+        Module::Load::load $_ for @PLUGINS;
+    }
+    @PLUGINS;
 }
 
 sub auto_flush {
@@ -109,6 +121,10 @@ sub capture {
     local $TRACE_ID = $TRACE_ID // new_trace_id();
 
     my $segment = AWS::XRay::Segment->new({ name => $name });
+    unless (defined $segment->{type} && $segment->{type} eq "subsegment") {
+        $_->apply_plugin($segment) for @PLUGINS;
+    }
+
     local $SEGMENT_ID = $segment->{id};
 
     my @ret;
