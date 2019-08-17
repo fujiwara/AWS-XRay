@@ -89,6 +89,7 @@ sub new_id {
 
 sub capture {
     my ($name, $code) = @_;
+    my $wantarray = wantarray;
 
     my $enabled;
     my $sampled = $SAMPLED;
@@ -113,11 +114,14 @@ sub capture {
 
     my @ret;
     eval {
-        if (wantarray) {
+        if ($wantarray) {
             @ret = $code->($segment);
         }
-        else {
+        elsif (defined $wantarray) {
             $ret[0] = $code->($segment);
+        }
+        else {
+            $code->($segment);
         }
     };
     my $error = $@;
@@ -140,7 +144,7 @@ sub capture {
         warn $@;
     }
     die $error if $error;
-    return wantarray ? @ret : $ret[0];
+    return $wantarray ? @ret : $ret[0];
 }
 
 sub capture_from {
