@@ -1,4 +1,5 @@
 language: perl
+dist: xenial
 perl:
-  - "5.12"
+  - "5.22"
   - "5.30"
