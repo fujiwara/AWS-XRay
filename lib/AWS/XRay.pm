@@ -213,7 +213,7 @@ AWS::XRay - AWS X-Ray tracing library
         capture "myHTTP", sub {
             my $segment = shift;
             # ...
-            $segment->{http} = { # modify segument document
+            $segment->{http} = { # modify segment document
                 request => {
                     method => "GET",
                     url    => "http://localhost/",
