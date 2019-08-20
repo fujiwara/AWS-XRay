@@ -190,6 +190,30 @@ sub add_capture {
     }
 }
 
+if ($ENV{LAMBDA_TASK_ROOT}) {
+    # AWS::XRay is loaded in AWS Lambda worker.
+    # notify the Lambda Runtime that initialization is complete.
+    mkdir '/tmp/.aws-xray' or warn "failed to make directory: $!";
+    open my $fh, '>', '/tmp/.aws-xray/initialized' or warn "failed to create file: $!";
+    close $fh;
+    utime undef, undef, '/tmp/.aws-xray/initialized' or warn "failed to touch file: $!";
+
+    # patch the capture
+    no warnings 'redefine';
+    no strict 'refs';
+    my $org = \&capture;
+    *capture = sub {
+        my ($trace_id, $segment_id, $sampled) = parse_trace_header($ENV{_X_AMZN_TRACE_ID});
+        local $AWS::XRay::SAMPLED = $sampled // $SAMPLER->();
+        local $AWS::XRay::ENABLED = $AWS::XRay::SAMPLED;
+        local($AWS::XRay::TRACE_ID, $AWS::XRay::SEGMENT_ID) = ($trace_id, $segment_id);
+        local *capture = $org;
+        local *trace = $org;
+        capture(@_);
+    };
+    *trace = \&capture;
+}
+
 1;
 __END__
 
