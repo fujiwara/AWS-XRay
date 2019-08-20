@@ -21,5 +21,3 @@ matrix:
     dist: trusty
   - perl: "5.12"
     dist: trusty
-  - perl: "5.10"
-    dist: trusty
