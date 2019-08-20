@@ -323,7 +323,7 @@ $rate is allowed a float value between 0 and 1.
 
 When capture_from() called with a trace header includes "Sampled=1", all of followed capture() are traced.
 
-=head2 samplier($code)
+=head2 sampler($code)
 
 Set/Get a code ref to sample for capture().
 
