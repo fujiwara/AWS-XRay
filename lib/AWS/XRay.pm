@@ -14,7 +14,7 @@ use AWS::XRay::Buffer;
 use Exporter 'import';
 our @EXPORT_OK = qw/ new_trace_id capture capture_from trace /;
 
-our $VERSION = "0.08";
+our $VERSION = "0.09";
 
 our $TRACE_ID;
 our $SEGMENT_ID;
