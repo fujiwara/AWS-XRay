@@ -1,0 +1,20 @@
+name: test
+on: [push]
+jobs:
+  runs-on: ubuntu-18.04
+  test:
+    strategy:
+      matrix:
+        perl: [ '5.30', '5.12' ]
+  name: Perl ${{ matrix.perl }}
+  steps:
+    - uses: actions/checkout@v1
+    - name: Setup perl
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: ${{ matrix.perl }}
+    - run: cpanm --quiet --installdeps --notest .
+    - run: |
+        perl Build.PL
+        ./Build
+        ./Build test
