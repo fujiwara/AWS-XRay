@@ -5,7 +5,9 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        perl: [ '5.30', '5.12' ]
+        perl:
+          - 5.30
+          - 5.14
     name: Perl ${{ matrix.perl }}
     steps:
       - uses: actions/checkout@v1
@@ -13,7 +15,7 @@ jobs:
         uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.perl }}
-      - run: cpanm --quiet --installdeps --notest .
+      - run: cpanm --installdeps .
       - run: |
           perl Build.PL
           ./Build
