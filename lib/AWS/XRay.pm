@@ -8,6 +8,7 @@ use Crypt::URandom ();
 use IO::Socket::INET;
 use Module::Load;
 use Time::HiRes ();
+use Types::Serialiser;
 use AWS::XRay::Segment;
 use AWS::XRay::Buffer;
 
