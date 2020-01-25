@@ -24,12 +24,26 @@ sub apply_plugin {
     $METADATA ||= do {
         my $ua = HTTP::Tiny->new(timeout => 1);
 
+        # get token for IMDSv2
+        my $token = do {
+            my $res = $ua->request("PUT", "$_base_url/api/token", {
+                headers => {
+                    'X-aws-ec2-metadata-token-ttl-seconds' => '60',
+                },
+            });
+            $res->{success} ? $res->{content} : '';
+        };
+        my $opt = {};
+        if ($token ne '') {
+            $opt->{headers}->{'X-aws-ec2-metadata-token'} = $token;
+        }
+
         my $instance_id = do {
-            my $res = $ua->get(ID_ADDR);
+            my $res = $ua->get(ID_ADDR, $opt);
             $res->{success} ? $res->{content} : '';
         };
         my $az = do {
-            my $res = $ua->get(AZ_ADDR);
+            my $res = $ua->get(AZ_ADDR, $opt);
             $res->{success} ? $res->{content} : '';
         };
 
