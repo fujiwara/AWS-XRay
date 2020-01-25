@@ -4,10 +4,17 @@ use warnings;
 
 use HTTP::Tiny;
 
-use constant {
-    ID_ADDR => 'http://169.254.169.254/latest/meta-data/instance-id',
-    AZ_ADDR => 'http://169.254.169.254/latest/meta-data/placement/availability-zone',
-};
+
+# for test
+our $_base_url = "http://169.254.169.254/latest";
+
+sub ID_ADDR() {
+    return "$_base_url/meta-data/instance-id";
+}
+
+sub AZ_ADDR() {
+    return "$_base_url/meta-data/placement/availability-zone";
+}
 
 our $METADATA;
 
