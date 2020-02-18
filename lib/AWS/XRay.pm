@@ -214,8 +214,12 @@ sub add_capture {
 if ($ENV{LAMBDA_TASK_ROOT}) {
     # AWS::XRay is loaded in AWS Lambda worker.
     # notify the Lambda Runtime that initialization is complete.
-    unless (-e '/tmp/.aws-xray') {
-        mkdir '/tmp/.aws-xray' or warn "failed to make directory: $!";
+    unless (mkdir '/tmp/.aws-xray') {
+        # ignore the error if the directory is already exits or other process created it.
+        my $err = $!;
+        unless (-d '/tmp/.aws-xray') {
+            warn "failed to make directory: $err";
+        }
     }
     open my $fh, '>', '/tmp/.aws-xray/initialized' or warn "failed to create file: $!";
     close $fh;
