@@ -4,7 +4,6 @@ use warnings;
 
 use HTTP::Tiny;
 
-
 # for test
 our $_base_url = "http://169.254.169.254/latest";
 
@@ -26,11 +25,14 @@ sub apply_plugin {
 
         # get token for IMDSv2
         my $token = do {
-            my $res = $ua->request("PUT", "$_base_url/api/token", {
-                headers => {
-                    'X-aws-ec2-metadata-token-ttl-seconds' => '60',
-                },
-            });
+            my $res = $ua->request(
+                "PUT",
+                "$_base_url/api/token", {
+                    headers => {
+                        'X-aws-ec2-metadata-token-ttl-seconds' => '60',
+                    },
+                }
+            );
             $res->{success} ? $res->{content} : '';
         };
         my $opt = {};
@@ -53,7 +55,7 @@ sub apply_plugin {
         };
     };
 
-    $segment->{origin}     = 'AWS::EC2::Instance';
+    $segment->{origin} = 'AWS::EC2::Instance';
     $segment->{aws}->{ec2} = $METADATA;
 }
 

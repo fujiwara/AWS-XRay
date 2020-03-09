@@ -76,13 +76,13 @@ sub auto_flush {
 
 sub sock {
     $Sock //= AWS::XRay::Buffer->new(
-            IO::Socket::INET->new(
-                PeerAddr => $DAEMON_HOST || "127.0.0.1",
-                PeerPort => $DAEMON_PORT || 2000,
-                Proto    => "udp",
-            ),
-            $AUTO_FLUSH,
-        );
+        IO::Socket::INET->new(
+            PeerAddr => $DAEMON_HOST || "127.0.0.1",
+            PeerPort => $DAEMON_PORT || 2000,
+            Proto    => "udp",
+        ),
+        $AUTO_FLUSH,
+    );
 }
 
 sub new_trace_id {
@@ -94,7 +94,7 @@ sub new_trace_id {
 }
 
 sub new_id {
-    unpack("H*", Crypt::URandom::urandom(8))
+    unpack("H*", Crypt::URandom::urandom(8));
 }
 
 # alias for backward compatibility
@@ -108,9 +108,11 @@ sub capture {
     my $sampled = $SAMPLED;
     if (defined $ENABLED) {
         $enabled = $ENABLED ? 1 : 0; # fix true or false (not undef)
-    } elsif ($TRACE_ID) {
-        $enabled = 0; # called from parent capture
-    } else {
+    }
+    elsif ($TRACE_ID) {
+        $enabled = 0;                # called from parent capture
+    }
+    else {
         # root capture try sampling
         $sampled = $SAMPLER->() ? 1 : 0;
         $enabled = $sampled     ? 1 : 0;
@@ -165,12 +167,12 @@ sub capture {
 }
 
 sub capture_from {
-    my ($header, $name, $code) = @_;
+    my ($header,   $name,       $code)    = @_;
     my ($trace_id, $segment_id, $sampled) = parse_trace_header($header);
 
     local $AWS::XRay::SAMPLED = $sampled // $SAMPLER->();
     local $AWS::XRay::ENABLED = $AWS::XRay::SAMPLED;
-    local($AWS::XRay::TRACE_ID, $AWS::XRay::SEGMENT_ID) = ($trace_id, $segment_id);
+    local ($AWS::XRay::TRACE_ID, $AWS::XRay::SEGMENT_ID) = ($trace_id, $segment_id);
     capture($name, $code);
 }
 
@@ -233,9 +235,9 @@ if ($ENV{LAMBDA_TASK_ROOT}) {
         my ($trace_id, $segment_id, $sampled) = parse_trace_header($ENV{_X_AMZN_TRACE_ID});
         local $AWS::XRay::SAMPLED = $sampled // $SAMPLER->();
         local $AWS::XRay::ENABLED = $AWS::XRay::SAMPLED;
-        local($AWS::XRay::TRACE_ID, $AWS::XRay::SEGMENT_ID) = ($trace_id, $segment_id);
+        local ($AWS::XRay::TRACE_ID, $AWS::XRay::SEGMENT_ID) = ($trace_id, $segment_id);
         local *capture = $org;
-        local *trace = $org;
+        local *trace   = $org;
         capture(@_);
     };
     *trace = \&capture;
@@ -382,4 +384,3 @@ it under the same terms as Perl itself.
 FUJIWARA Shunichiro E<lt>fujiwara.shunichiro@gmail.comE<gt>
 
 =cut
-

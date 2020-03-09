@@ -54,8 +54,10 @@
       },
       "test" : {
          "requires" : {
+            "HTTP::Server::PSGI" : "0",
             "IO::Scalar" : "0",
-            "Test::More" : "0.98"
+            "Test::More" : "0.98",
+            "Test::TCP" : "0"
          }
       }
    },
@@ -76,6 +78,7 @@
    "x_contributors" : [
       "Ichinose Shogo <shogo82148@gmail.com>",
       "Mohammad S Anwar <mohammad.anwar@yahoo.com>",
+      "Pedro Melo <melo@simplicidade.org>",
       "moznion <moznion@gmail.com>",
       "mutsutoshi.yoshimoto <mutsutoshi.yoshimoto@20202759n.guest.mixi.co.jp>",
       "papix <mail@papix.net>"
