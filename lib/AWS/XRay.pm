@@ -11,6 +11,7 @@ use Time::HiRes ();
 use Types::Serialiser;
 use AWS::XRay::Segment;
 use AWS::XRay::Buffer;
+use Carp;
 
 use Exporter 'import';
 our @EXPORT_OK = qw/ new_trace_id capture capture_from trace /;
@@ -29,6 +30,9 @@ our @PLUGINS;
 
 our $DAEMON_HOST = "127.0.0.1";
 our $DAEMON_PORT = 2000;
+
+our $CROAK_INVALID_NAME = 0;
+my $VALID_NAME_REGEXP = qr/\A[\p{L}\p{N}\p{Z}_.:\/%&#=+\\\-@]{1,200}\z/;
 
 if ($ENV{"AWS_XRAY_DAEMON_ADDRESS"}) {
     ($DAEMON_HOST, $DAEMON_PORT) = split /:/, $ENV{"AWS_XRAY_DAEMON_ADDRESS"};
@@ -97,11 +101,19 @@ sub new_id {
     unpack("H*", Crypt::URandom::urandom(8));
 }
 
+sub is_valid_name {
+    $_[0] =~ $VALID_NAME_REGEXP;
+}
+
 # alias for backward compatibility
 *trace = \&capture;
 
 sub capture {
     my ($name, $code) = @_;
+    if (!is_valid_name($name)) {
+        my $msg = "invalid segment name: $name";
+        $CROAK_INVALID_NAME ? croak($msg) : carp($msg);
+    }
     my $wantarray = wantarray;
 
     my $enabled;
@@ -371,6 +383,20 @@ When $mode is 0, segment data are buffered in memory. You should call AWS::XRay-
 =head2 AWS_XRAY_DAEMON_ADDRESS environment variable
 
 Set the host and port of the X-Ray daemon. Default 127.0.0.1:2000
+
+=head2 $AWS::XRay::CROAK_INVALID_NAME
+
+When set to 1 (default 0), capture() will raise exception if a segment name is invalid.
+
+See https://docs.aws.amazon.com/xray/latest/devguide/xray-api-segmentdocuments.html
+
+=over
+
+name – The logical name of the service that handled the request, up to 200 characters.
+For example, your application's name or domain name.
+Names can contain Unicode letters, numbers, and whitespace, and the following symbols: _, ., :, /, %, &, #, =, +, \, -, @
+
+=back
 
 =head1 LICENSE
 
