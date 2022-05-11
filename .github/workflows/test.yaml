@@ -19,8 +19,8 @@ jobs:
         with:
           perl-version: ${{ matrix.perl }}
       - run: |
-          cpanm --installdeps .
-          cpanm Module::Build::Tiny
+          cpanm --installdeps -n .
+          cpanm -n Module::Build::Tiny
           perl Build.PL
           ./Build
           ./Build test
