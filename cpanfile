@@ -14,4 +14,3 @@ requires 'Crypt::URandom';
 requires 'Time::HiRes';
 requires 'HTTP::Tiny';
 requires 'Module::Load';
-requires 'Module::Build::Tiny';
