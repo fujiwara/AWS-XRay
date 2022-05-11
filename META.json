@@ -49,7 +49,7 @@
             "Module::Load" : "0",
             "Time::HiRes" : "0",
             "Types::Serialiser" : "0",
-            "perl" : "5.012000"
+            "perl" : "5.016000"
          }
       },
       "test" : {
