@@ -2,6 +2,13 @@ Revision history for Perl extension AWS-XRay
 
 {{$NEXT}}
 
+0.12 2022-05-11T03:46:44Z
+    - encode JSON as UTF-8 encoded string (#22 @hitode909)
+    - capture() may die on invalid names. (#20 @fujiwara)
+    - fix race condition of creating the directory (#19 @shogo82148)
+    - Create XRay control directory only if necessary (#18 @melo)
+    - Support IMDSv2 (#16 @shogo82148)
+
 0.10 2020-01-23T00:28:43Z
     - Fix Bareword (#13 @negachov)
 

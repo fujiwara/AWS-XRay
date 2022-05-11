@@ -73,7 +73,7 @@
          "web" : "https://github.com/fujiwara/AWS-XRay"
       }
    },
-   "version" : "0.10",
+   "version" : "0.12",
    "x_authority" : "cpan:FUJIWARA",
    "x_contributors" : [
       "Ichinose Shogo <shogo82148@gmail.com>",
